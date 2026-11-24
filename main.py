@@ -80,6 +80,16 @@ def validate(text: str) -> list[str]:
                 f"entry contains forbidden character {ch!r} "
                 "(must be a single word)"
             )
+    # The docstring promises the word is free of control characters,
+    # but the checks above only cover whitespace: reject the remaining
+    # C0 controls and DEL explicitly so an invisible byte can never
+    # slip into the judged word.
+    bad_controls = sorted({ch for ch in text if ord(ch) < 0x20 or ord(ch) == 0x7F})
+    for ch in bad_controls:
+        problems.append(
+            f"entry contains control character U+{ord(ch):04X} "
+            "(must be a single visible word)"
+        )
     try:
         text.encode("utf-8")
     except UnicodeEncodeError as exc:  # pragma: no cover - defensive
